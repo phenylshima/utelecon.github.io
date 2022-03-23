@@ -31,6 +31,28 @@ sitemap: false
 
 ## 東京大学のシステム
 
+<ul>
+{% for p in pages %}
+  {% unless p.url contains '/en/' or p.sitemap == false %}
+    {% if p.url contains '/systems' %}
+      <li><a href="{{ p.url | replace: '.html', '' }}">{{ p.title }}</a></li>
+    {% endif %}
+  {% endunless %}
+{% endfor %}
+</ul>
+
+### UTokyo Account
+
+<ul>
+{% for p in pages %}
+  {% unless p.url contains '/en/' or p.sitemap == false %}
+    {% if p.url contains '/utokyo_account/' %}
+      <li><a href="{{ p.url | replace: '.html', '' }}">{{ p.title }}</a></li>
+    {% endif %}
+  {% endunless %}
+{% endfor %}
+</ul>
+
 ### UTAS
 
 <ul>
@@ -91,12 +113,36 @@ sitemap: false
 {% endfor %}
 </ul>
 
+### UTokyo Microsoft License (Microsoft 365)
+
+<ul>
+{% for p in pages %}
+  {% unless p.url contains '/en/' or p.sitemap == false %}
+    {% if p.url contains '/microsoft' %}
+      <li><a href="{{ p.url | replace: '.html', '' }}">{{ p.title }}</a></li>
+    {% endif %}
+  {% endunless %}
+{% endfor %}
+</ul>
+
+### UTokyo WiFi
+
+<ul>
+{% for p in pages %}
+  {% unless p.url contains '/en/' or p.sitemap == false %}
+    {% if p.url contains '/utokyo_wifi' %}
+      <li><a href="{{ p.url | replace: '.html', '' }}">{{ p.title }}</a></li>
+    {% endif %}
+  {% endunless %}
+{% endfor %}
+</ul>
+
 ### その他
 
 <ul>
 {% for p in pages %}
   {% unless p.url contains '/en/' or p.sitemap == false %}
-    {% if p.url contains '/slido/' %}
+    {% if p.url contains '/antivirus' or p.url contains '/slido/' or p.url contains '/utokyo_vpn/' %}
       <li><a href="{{ p.url | replace: '.html', '' }}">{{ p.title }}</a></li>
     {% endif %}
   {% endunless %}
@@ -175,7 +221,7 @@ sitemap: false
 <ul>
 {% for p in pages %}
   {% unless p.url contains '/en/' or p.sitemap == false %}
-    {% unless p.url contains '/oc/' or p.url contains '/faculty_members/' or p.url contains '/online/' or p.url contains '/articles/' or p.url contains '/good-practice/' or p.url contains '/utas' or p.url contains '/itc_lms' or p.url contains '/lms_lecturers/' or p.url contains '/lms_students/' or p.url contains '/zoom/' or p.url contains '/webex/' or p.url contains '/eccs_cloud_email' or p.url contains '/meet/' or p.url contains '/slido/' or p.url contains '/notice/' or p.url contains '/events/' or p.url contains '/redirects.json' %}
+    {% unless p.url contains '/oc/' or p.url contains '/faculty_members/' or p.url contains '/systems' or p.url contains '/utokyo_account/' or p.url contains '/utas' or p.url contains '/itc_lms' or p.url contains '/lms_lecturers/' or p.url contains '/lms_students/' or p.url contains '/zoom/' or p.url contains '/webex/' or p.url contains '/eccs_cloud_email' or p.url contains '/meet/' or p.url contains '/microsoft' or p.url contains '/utokyo_wifi' or p.url contains '/antivirus' or p.url contains '/slido/' or p.url contains '/utokyo_vpn/' or p.url contains '/online/' or p.url contains '/articles/' or p.url contains '/good-practice/' or p.url contains '/notice/' or p.url contains '/events/' or p.url contains '/redirects.json' %}
       <li><a href="{{ p.url | replace: '.html', '' }}">{{ p.title }}</a></li>
     {% endunless %}
   {% endunless %}
