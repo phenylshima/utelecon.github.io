@@ -1,0 +1,47 @@
+name: Jekyll site CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the site in the jekyll/builder container
+      run: |
+        docker run \
+        -e JEKYLL_ENV=development \
+        -v ${{ github.workspace }}:/srv/jekyll -v ${{ github.workspace }}/_site:/srv/jekyll/_site \
+        jekyll/builder:latest /bin/bash \
+        -c "chmod -R 777 /srv/jekyll && bundle install && jekyll build"
+    - name: Check links
+      run: |
+        mkdir -p _report
+        docker run \
+        --name html_proofer \
+        -v ${{ github.workspace }}/_site:/src \
+        klakegg/html-proofer:latest \
+        --assume-extension --empty-alt-ignore \
+        --url-swap "https\://utelecon\.adm\.u-tokyo\.ac\.jp/:/" --disable-external \
+        2>_report/stderr || true
+        docker logs html_proofer > /dev/null 2>_report/all.md
+    - name: Remove errors caused by the unexistance of translation
+      run: |
+        cat _report/all.md | \
+        sed '1i\\' | \
+        sed -zE 's/\s+\*[^\n]*\s+<a href="\/en\/[^"]*?">English<\/a>//g' | \
+        sed -zE 's/\s+\*[^\n]*\s+<a href="\/[^"]*?">日本語<\/a>//g' | \
+        sed -zE 's/(\n-[^\n]+)+(\n-[^\n]+)/\2/g' | \
+        sed -zE 's/\n-[^\n]+\n\n/\n\n/g' \
+        > _report/without_translation.md
+    - uses: actions/upload-artifact@v3
+      with:
+        name: report
+        path: _report
+  
