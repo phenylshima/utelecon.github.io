@@ -13,33 +13,28 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build the site in the jekyll/builder container
-      run: |
-        docker run \
-        -e JEKYLL_ENV=development \
-        -v ${{ github.workspace }}:/srv/jekyll -v ${{ github.workspace }}/_site:/srv/jekyll/_site \
-        jekyll/builder:latest /bin/bash \
-        -c "chmod -R 777 /srv/jekyll && bundle install && jekyll build"
-    - name: Check links
-      run: |
-        mkdir -p _report
-        docker run \
-        --name html_proofer \
-        -v ${{ github.workspace }}/_site:/src \
-        klakegg/html-proofer:latest \
-        --assume-extension --empty-alt-ignore \
-        --url-swap "https\://utelecon\.adm\.u-tokyo\.ac\.jp/:/" --disable-external \
-        2>_report/stderr || true
-        docker logs html_proofer > /dev/null 2>_report/all.md
-    - name: Remove errors caused by the unexistance of translation
-      run: |
-        cat _report/all.md | \
-        sed '1i\\' | \
-        sed -zE 's/\s+\*[^\n]*\s+<a href="\/en\/[^"]*?">English<\/a>//g' | \
-        sed -zE 's/\s+\*[^\n]*\s+<a href="\/[^"]*?">日本語<\/a>//g' | \
-        sed -zE 's/(\n-[^\n]+)+(\n-[^\n]+)/\2/g' | \
-        sed -zE 's/\n-[^\n]+\n\n/\n\n/g' \
-        > _report/without_translation.md
+    - name: Cache bundle gems
+      uses: actions/cache@v2
+      with:
+        path: vendor/bundle
+        key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-gem-${{ env.cache-name }}-
+          ${{ runner.os }}-gem-
+          ${{ runner.os }}-
+    - name: Set up Ruby 3.1
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.1.1
+        bundler-cache: true
+    - name: Install Bundler
+      run: gem install bundler --no-document -v $(grep "BUNDLED WITH" -1 Gemfile.lock | tail -n 1)
+    - name: Bundle install
+      run: bundle install --path=vendor/bundle --jobs 4 --retry 3
+    - name: Run jekyll
+      run: JEKYLL_ENV=development bundle exec jekyll build
+    - name: Run html-proofer
+      run: bundle exec ruby code/html-proofer/main.rb || true
     - uses: actions/upload-artifact@v3
       with:
         name: report
