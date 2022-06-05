@@ -1,0 +1,19 @@
+name: Test Report
+
+on:
+  workflow_run:
+    workflows: ['Jekyll site CI']
+    types:
+      - completed
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Test Reporter
+      uses: dorny/test-reporter@v1.5.0
+      with:
+        artifact: report
+        name: HTML Link/Image/Script Check
+        path: '*.json'
+        reporter: mocha-json
+        fail-on-error: 'false'
