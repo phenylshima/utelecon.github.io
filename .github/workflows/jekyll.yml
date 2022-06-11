@@ -27,16 +27,14 @@ jobs:
       with:
         ruby-version: 3.1.1
         bundler-cache: true
-    - name: Install Bundler
-      run: gem install bundler --no-document -v $(grep "BUNDLED WITH" -1 Gemfile.lock | tail -n 1)
-    - name: Bundle install
-      run: bundle install --path=vendor/bundle --jobs 4 --retry 3
     - name: Run jekyll
       run: JEKYLL_ENV=development bundle exec jekyll build
     - name: Run html-proofer
-      run: bundle exec ruby code/html-proofer/main.rb || true
+      run: bundle exec ruby code/html-proofer/run.rb
+    - name: Generate md files
+      run: bundle exec ruby code/html-proofer/analyze.rb
     - uses: actions/upload-artifact@v3
       with:
         name: report
         path: _report
-  
+

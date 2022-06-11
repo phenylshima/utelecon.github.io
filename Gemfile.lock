@@ -279,6 +279,7 @@ DEPENDENCIES
   github-pages
   html-proofer!
   jekyll
+  octokit (~> 4.0)
   webrick
 
 BUNDLED WITH

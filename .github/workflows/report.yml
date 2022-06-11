@@ -9,11 +9,46 @@ jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-    - name: Test Reporter
-      uses: dorny/test-reporter@v1.5.0
+    - name: Download artifact
+      uses: actions/github-script@v6
       with:
-        artifact: report
-        name: HTML Link/Image/Script Check
-        path: '*.json'
-        reporter: mocha-json
-        fail-on-error: 'false'
+        script: |
+          let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+          });
+          let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+            return artifact.name == "report"
+          })[0];
+          let download = await github.rest.actions.downloadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: matchArtifact.id,
+              archive_format: 'zip',
+          });
+          let fs = require('fs');
+          fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/report.zip`, Buffer.from(download.data));
+    - name: Unzip artifact
+      run: unzip -d _report report.zip
+    - name: Upload Check
+      uses: actions/github-script@v6
+      with:
+        script: |
+          let fs = require('fs');
+          const name = 'HTML Link/Image/Script Check';
+          let uploadResult = await github.rest.checks.create({
+            head_sha: context.sha,
+            name,
+            conclusion: 'neutral',
+            status: 'completed',
+            output: {
+              title: name,
+              summary: fs.readFileSync('_report/summary.md', 'utf-8'),
+              text: fs.readFileSync('_report/report.md', 'utf-8')
+            },
+            ...context.repo
+          })
+          core.info(`Check run status: ${uploadResult.status}`)
+          core.info(`Check run URL: ${uploadResult.data.url}`)
+          core.info(`Check run HTML: ${uploadResult.data.html_url}`)
