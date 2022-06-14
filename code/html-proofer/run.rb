@@ -3,6 +3,7 @@
 require 'html_proofer'
 require 'json'
 require 'fileutils'
+require_relative 'check/utelecon_domain'
 
 class CustomRunner < HTMLProofer::Runner
   def report_failed_checks; end
@@ -32,6 +33,7 @@ proofer = CustomRunner.new(['./_site'], {
                              type: :directory,
                              disable_external: true,
                              ignore_missing_alt: true,
+                             checks: %w[Links Images Scripts UteleconDomain],
                              swap_urls: {
                                %r{^https://utelecon\.adm\.u-tokyo\.ac\.jp} => '/'
                              }
