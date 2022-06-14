@@ -13,6 +13,10 @@
     {% endif %}
     <meta charset="UTF-8">
 
+    {% if jekyll.environment == "development" %}
+    <!--html-proofer:{{ page.check }}-->
+    {% endif %}
+
     <meta property="og:type" content="website">
     {% include layouts/description.html %}
     {% assign url_with_ext = site.url | append: page.url %}
