@@ -6,6 +6,26 @@ require 'fileutils'
 
 class CustomRunner < HTMLProofer::Runner
   def report_failed_checks; end
+
+  def check_parsed(path, source)
+    should_check = true
+    @html.xpath('/html/head/comment()').each do |node|
+      text = node.text.strip
+      next unless text.start_with?('html-proofer:')
+
+      parse = /^html-proofer:(?<bool>true|false)$/.match(text)
+      next if parse.nil? || !parse.names.include?('bool')
+
+      should_check = false if parse[:bool] != 'true'
+
+      break
+    end
+    if should_check
+      super
+    else
+      { internal_urls: {}, external_urls: {}, failures: [] }
+    end
+  end
 end
 
 proofer = CustomRunner.new(['./_site'], {
