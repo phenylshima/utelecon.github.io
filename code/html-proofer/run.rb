@@ -24,7 +24,10 @@ class CustomRunner < HTMLProofer::Runner
     if should_check
       super
     else
-      { internal_urls: {}, external_urls: {}, failures: [] }
+      { internal_urls: {}, external_urls: {},
+        failures: [
+          HTMLProofer::Failure.new(path, 'Flag', '')
+        ] }
     end
   end
 end
