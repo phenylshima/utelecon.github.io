@@ -50,8 +50,8 @@ MESSAGES = {
     internal_not_exist: ['internally linking to ', ', which does not exist'],
     internal_hash: ['internally linking to ', "; the file exists, but the hash '", "' does not"]
   },
-  'UteleconDomain': {
-    domain: ['linking to ', ", which include utelecon's domain(use relative or absolute path instead)."]
+  'Utelecon Domain': {
+    domain: ['linking to ', ", which includes utelecon's domain(use relative or absolute path instead)."]
   }
 }.freeze
 

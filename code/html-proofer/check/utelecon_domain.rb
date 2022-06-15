@@ -10,7 +10,7 @@ class UteleconDomain < HTMLProofer::Check
       next if @link.ignore?
 
       if %r{https:?//utelecon\.adm\.u-tokyo\.ac\.jp/}.match?(@link.link_attribute)
-        add_failure("linking to #{@link.link_attribute}, which include utelecon's domain(use relative or absolute path instead).")
+        add_failure("linking to #{@link.link_attribute}, which includes utelecon's domain(use relative or absolute path instead).")
       end
     end
   end
