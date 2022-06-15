@@ -29,16 +29,19 @@ def group_failures(report)
   report.group_by do |failure|
     category = failure[:@check_name]
     key = find_message(category, failure[:@description])
-    if key == :unknown_category
+
+    case key
+    when :unknown_category
       puts "Unknown Category: #{failure[:@check_name]}"
-    elsif key == :unknown_message
+    when :unknown_message
       puts "Unknown Message: #{failure[:@check_name]}/#{failure[:@description]}"
-    end
-    if key == :internal_not_exist
+    when :internal_not_exist
       path = remove_en_index_ext(failure[:@path])
       url = remove_en_index_ext(get_arguments(category, key, failure[:@description])[0])
       next :translation if path == url
       next :translation if path == URI.decode_www_form_component(url)
+    when :flag
+      next :flag
     end
     if MESSAGE_SKIP.include?(key)
       :skip
@@ -70,7 +73,7 @@ class Report
     EOS
   end
 
-  def failures_to_markdown(id, failures)
+  def generate_report_full(id, failures)
     grouped = failures.group_by { |f| f[:@path] }
     stats = grouped.transform_values do |v|
       v.group_by { |f| f[:@check_name] }.transform_values(&:size)
@@ -105,7 +108,7 @@ class Report
     md << "\n"
   end
 
-  def translation_to_markdown(failures)
+  def generate_report_path(failures)
     "\n- #{failures.map { |f| f[:@path] }.join("\n- ")}\n"
   end
 
@@ -114,7 +117,7 @@ class Report
   end
 
   def details(summary, content)
-    "<details><summary>#{summary}</summary>\n#{content}\n</details>"
+    "<details><summary>#{summary}</summary>\n#{content}\n</details>\n"
   end
 
   def table(id, hash, cols, topleft)
@@ -172,27 +175,43 @@ File.open('_report/all.json', 'r') do |file|
   md_summary << md.generate_summary(0, stats)
   File.write('_report/summary.md', md_summary)
 
+  settings = String.new
+  unless MESSAGE_SKIP.size.zero?
+    settings << md.details('Failures marked as `skip`',
+                           "\n- #{MESSAGE_SKIP.join("\n- ")}\n")
+  end
+  unless report_grouped[:flag].nil?
+    settings << md.details('Files not checked',
+                           md.generate_report_path(report_grouped[:flag]))
+  end
+
   md_text = String.new
+
+  unless settings.size.zero?
+    md_text << md.title(2, 'Settings', 0, 3)
+    md_text << settings
+    md_text << "\n------------------------------------\n\n"
+  end
 
   md_text << md.title(2, 'Failure', 0, 0)
   md_text << if report_grouped[:main].nil?
                '✔️ All checks passed!'
              else
-               md.failures_to_markdown(1, report_grouped[:main])
+               md.generate_report_full(1, report_grouped[:main])
              end
 
   md_text << md.title(2, 'Translation', 0, 2)
   md_text << if report_grouped[:translation].nil?
                '✔️ All pages are translated!'
              else
-               md.details('Pages without translation', md.translation_to_markdown(report_grouped[:translation]))
+               md.details('Pages without translation', md.generate_report_path(report_grouped[:translation]))
              end
 
   md_text << md.title(2, 'Skipped', 0, 1)
   md_text << if report_grouped[:skip].nil?
                'No skipped issues.'
              else
-               md.details('Skipped Issues', md.failures_to_markdown(2, report_grouped[:skip]))
+               md.details('Skipped Issues', md.generate_report_full(2, report_grouped[:skip]))
              end
 
   File.write('_report/report.md', md_text.byteslice(0, 65_000).scrub(''))
