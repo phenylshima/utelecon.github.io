@@ -3,6 +3,7 @@
 require 'set'
 require 'json'
 require 'cgi/escape'
+require 'uri'
 require_relative './message'
 
 def remove_en_index_ext(url, prefix = '', en = true)
@@ -37,6 +38,7 @@ def group_failures(report)
       path = remove_en_index_ext(failure[:@path])
       url = remove_en_index_ext(get_arguments(category, key, failure[:@description])[0])
       next :translation if path == url
+      next :translation if path == URI.decode_www_form_component(url)
     end
     if MESSAGE_SKIP.include?(key)
       :skip
