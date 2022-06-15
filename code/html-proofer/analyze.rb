@@ -28,6 +28,11 @@ def group_failures(report)
   report.group_by do |failure|
     category = failure[:@check_name]
     key = find_message(category, failure[:@description])
+    if key == :unknown_category
+      puts "Unknown Category: #{failure[:@check_name]}"
+    elsif key == :unknown_message
+      puts "Unknown Message: #{failure[:@check_name]}/#{failure[:@description]}"
+    end
     if key == :internal_not_exist
       path = remove_en_index_ext(failure[:@path])
       url = remove_en_index_ext(get_arguments(category, key, failure[:@description])[0])
