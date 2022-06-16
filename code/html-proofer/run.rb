@@ -38,7 +38,8 @@ proofer = CustomRunner.new(['./_site'], {
                              ignore_missing_alt: true,
                              checks: %w[Links Images Scripts UteleconDomain],
                              swap_urls: {
-                               %r{^https://utelecon\.adm\.u-tokyo\.ac\.jp} => '/'
+                               %r{^https?://utelecon\.adm\.u-tokyo\.ac\.jp} => '',
+                               %r{^https?://utelecon\.github\.io} => ''
                              }
                            })
 proofer.run
@@ -54,4 +55,9 @@ File.open('_report/all.json', 'w') do |file|
       .to_h
   end
   file.write(JSON[failures])
+end
+
+File.open('_report/external.json', 'w') do |file|
+  external = proofer.instance_variable_get('@external_urls')
+  file.write(JSON[external])
 end
