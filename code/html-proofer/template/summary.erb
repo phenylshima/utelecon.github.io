@@ -2,11 +2,11 @@
   stats.key?(:main) ? 'red' : 'green'
 %>&label=tests&message=<%=
   stats.key?(:main) ? stats[:main] : 0
-%> failed, <%=
+%>%20failed%2C%20<%=
   stats.key?(:skip) ? stats[:skip] : 0
-%> skipped)
+%>%20skipped)
 ![](https://img.shields.io/static/v1?color=lightgray&label=translation&message=<%=
-  stats.key?(:translation) ? stats[:translation] : 0%> missing)
+  stats.key?(:translation) ? stats[:translation] : 0%>%20missing)
 
 | Report | Failure count |
 | -- | -- |
