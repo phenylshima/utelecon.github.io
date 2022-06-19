@@ -55,6 +55,8 @@ end
 class Report
   def initialize
     @render_id = 0
+    @id_hash = {}.compare_by_identity
+    @id_seq = 0
   end
 
   def generate_summary(stats)
@@ -78,6 +80,11 @@ class Report
       bind.local_variable_set(k, v)
     end
     erb.result(bind)
+  end
+
+  def id(obj)
+    @id_hash[obj] = "id-#{@id_seq += 1}" unless @id_hash.key?(obj)
+    @id_hash[obj]
   end
 
   def content_sanitize(content)
