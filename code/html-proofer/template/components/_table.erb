@@ -1,8 +1,8 @@
 | <%=topleft%> <% cols.keys.each{|c|%>| <%=c%> <%} -%> |
 | -- <% cols.keys.each{|c|%>| -- <%} -%>|<%=-%>
 <%- grouped.each do |k,v|%>
-  <%-%>| [<%=k%>](#<%=v.object_id%>) | <%=-%>
+  <%-%>| [<%=k%>](#<%=id(v)%>) | <%=-%>
   <%- cols.keys.each do |c| -%>
-    <%- if v.key?(c)%>[<%=v[c].size%>](#<%=v[c].object_id%>)<%end%> | <%=-%>
+    <%- if v.key?(c)%>[<%=v[c].size%>](#<%=id(v[c])%>)<%end%> | <%=-%>
   <%- end -%>
 <%- end %>
