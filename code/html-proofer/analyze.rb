@@ -83,7 +83,12 @@ class Report
   def content_sanitize(content)
     return nil if content.nil?
 
-    CGI.escapeHTML(content.gsub("\n", '\n'))
+    escaped = CGI.escapeHTML(content.gsub("\n", '\n'))
+    if escaped.strip.size.zero?
+      nil
+    else
+      escaped
+    end
   end
 end
 
