@@ -4,6 +4,7 @@ require 'set'
 require 'json'
 require 'cgi/escape'
 require 'uri'
+require 'erb'
 require_relative './message'
 
 def remove_en_index_ext(url, prefix = '', en = true)
@@ -52,108 +53,36 @@ def group_failures(report)
 end
 
 class Report
-  def generate_summary(id, stats)
-    <<~"EOS"
-      ![](https://img.shields.io/static/v1?color=#{stats.key?(:main) ? 'red' : 'green'}\
-      &label=tests&message=\
-      #{stats.key?(:main) ? stats[:main] : 0}%20failed%2C%20\
-      #{stats.key?(:skip) ? stats[:skip] : 0}%20skipped\
-      )
-
-      ![](https://img.shields.io/static/v1?color=lightgray\
-      &label=translation&message=\
-      #{stats.key?(:translation) ? stats[:translation] : 0}%20missing\
-      )
-
-      | Report | Failure count |
-      | -- | -- |
-      | [❌ Failure](##{id(id, 0)}) | #{stats.key?(:main) ? stats[:main] : 0} |
-      | [🌏 Translation](##{id(id, 2)}) | #{stats.key?(:translation) ? stats[:translation] : 0} |
-      | [✖️ Skipped](##{id(id, 1)}) | #{stats.key?(:skip) ? stats[:skip] : 0} |
-    EOS
+  def initialize
+    @render_id = 0
   end
 
-  def generate_report_full(id, failures)
-    grouped = failures.group_by { |f| f[:@path] }
-    stats = grouped.transform_values do |v|
-      v.group_by { |f| f[:@check_name] }.transform_values(&:size)
+  def generate_summary(stats)
+    ERB.new(
+      File.read('code/html-proofer/template/summary.erb'),
+      trim_mode: '-'
+    ).result(binding)
+  end
+
+  def generate_text(report_grouped)
+    ERB.new(
+      File.read('code/html-proofer/template/detail.erb'),
+      trim_mode: '-'
+    ).result(binding)
+  end
+
+  def render(file, bind, vars = {})
+    path = File.join('code/html-proofer/template/components/', "_#{file}.erb")
+    erb = ERB.new(File.read(path), eoutvar: "res_#{@render_id += 1}", trim_mode: '-')
+    vars.each do |k, v|
+      bind.local_variable_set(k, v)
     end
-    cols = Hash[
-      stats
-           .each_with_object(Set[]) { |(_k, v), o| o.merge(v.keys) }
-           .map
-           .with_index { |c, idx| [c, idx] }
-    ]
-
-    md = String.new
-    md << table(id, stats, cols, 'Failure')
-    md << "\n"
-    md << with_title(id, grouped) do |_k, v, idx|
-      v.group_by { |f| f[:@check_name] }.each_with_object(String.new) do |(name, fails), codes|
-        codes << title(4, name, id, idx, cols[name])
-        codes << "\n"
-        tmp = fails.each_with_object(String.new) do |failure, c|
-          c << "- #{failure[:@description]}"
-          c << " (L#{failure[:@line]})" unless failure[:@line].nil?
-          unless failure[:@content].nil? || failure[:@content].strip.size.zero?
-            c << indent(1,
-                        "`#{content_sanitize(failure[:@content])}`")
-          end
-          c << "\n"
-        end
-        codes << indent(1, tmp)
-        codes << "\n"
-      end
-    end
-    md << "\n"
-  end
-
-  def generate_report_path(failures)
-    "\n- #{failures.map { |f| f[:@path] }.join("\n- ")}\n"
-  end
-
-  def indent(level, content)
-    content.gsub(/^/, '  ' * level)
-  end
-
-  def details(summary, content)
-    "<details><summary>#{summary}</summary>\n#{content}\n</details>\n"
-  end
-
-  def table(id, hash, cols, topleft)
-    table = "\n| #{topleft} | #{cols.keys.join(' | ')} |\n|#{' -- |' * (cols.size + 1)}\n"
-    hash.each_with_index do |(k, v), idx|
-      col_texts = cols.map do |c, col_id|
-        v.key?(c) ? "[#{v[c]}](##{id(id, idx, col_id)})" : ''
-      end
-      table << "| [#{k}](##{id(id, idx)}) | #{col_texts.join(' | ')} |\n"
-    end
-    table
-  end
-
-  def with_title(id, hash)
-    codes = String.new
-    hash.each_with_index do |(k, v), idx|
-      codes << title(3, k, id, idx)
-      codes << "\n\n"
-      codes << yield(k, v, idx)
-      codes << "\n\n"
-    end
-    codes
-  end
-
-  def title(level, text, *ids)
-    id = id(ids)
-    "<h#{level} id='#{id}'><a href='##{id}'>#{text}</a></h#{level}>\n"
-  end
-
-  def id(*ids)
-    ids.flatten.each_with_object('i'.dup) do |i, str|
-      str << "-#{i}"
-    end
+    erb.result(bind)
   end
 
   def content_sanitize(content)
+    return nil if content.nil?
+
     CGI.escapeHTML(content.gsub("\n", '\n'))
   end
 end
@@ -171,48 +100,10 @@ File.open('_report/all.json', 'r') do |file|
 
   md = Report.new
 
-  md_summary = String.new
-  md_summary << md.generate_summary(0, stats)
+  md_summary = md.generate_summary(stats)
   File.write('_report/summary.md', md_summary)
 
-  settings = String.new
-  unless MESSAGE_SKIP.size.zero?
-    settings << md.details('Failures marked as `skip`',
-                           "\n- #{MESSAGE_SKIP.join("\n- ")}\n")
-  end
-  unless report_grouped[:flag].nil?
-    settings << md.details('Files not checked',
-                           md.generate_report_path(report_grouped[:flag]))
-  end
-
-  md_text = String.new
-
-  unless settings.size.zero?
-    md_text << md.title(2, 'Settings', 0, 3)
-    md_text << settings
-    md_text << "\n------------------------------------\n\n"
-  end
-
-  md_text << md.title(2, 'Failure', 0, 0)
-  md_text << if report_grouped[:main].nil?
-               '✔️ All checks passed!'
-             else
-               md.generate_report_full(1, report_grouped[:main])
-             end
-
-  md_text << md.title(2, 'Translation', 0, 2)
-  md_text << if report_grouped[:translation].nil?
-               '✔️ All pages are translated!'
-             else
-               md.details('Pages without translation', md.generate_report_path(report_grouped[:translation]))
-             end
-
-  md_text << md.title(2, 'Skipped', 0, 1)
-  md_text << if report_grouped[:skip].nil?
-               'No skipped issues.'
-             else
-               md.details('Skipped Issues', md.generate_report_full(2, report_grouped[:skip]))
-             end
+  md_text = md.generate_text(report_grouped)
 
   File.write('_report/report.md', md_text.byteslice(0, 65_000).scrub(''))
 end
