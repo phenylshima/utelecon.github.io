@@ -1,0 +1,65 @@
+## Settings
+<% unless MESSAGE_SKIP.size.zero? %>
+<details><summary>Failures marked as `skip`</summary>
+<% MESSAGE_SKIP.each do |skipped| %>
+- <%= skipped -%>
+<% end %>
+
+</details>
+<% end %>
+
+<% unless report_grouped[:flag].size.zero? %>
+<details><summary>Files not checked</summary>
+
+<% report_grouped[:flag].each do |not_checked| %>
+- <%= not_checked[:@path] -%>
+<% end %>
+
+</details>
+<% end %>
+
+------------------------------------
+
+<h2 id='failure'><a href='#failure'>Failure</a></h2>
+<%if report_grouped[:main].nil?%>
+✔️ All checks passed!
+<%else%>
+
+<%=render('failures',binding,{
+    topleft: 'Failures',
+    grouped: report_grouped[:main]
+             .group_by { |f| f[:@path] }
+             .transform_values { |v| v.group_by { |f| f[:@check_name] }}
+})%>
+
+<%end%>
+
+<h2 id='translation'><a href='#translation'>Translation</a></h2>
+<%if report_grouped[:translation].nil?%>
+✔️ All pages are translated!
+<%else%>
+<details>
+<summary>Pages without translation</summary>
+<% report_grouped[:translation].each do |translation| %>
+- <%= translation[:@path] -%>
+<% end %>
+</details>
+<%end%>
+
+<h2 id='skipped'><a href='#skipped'>Skipped</a></h2>
+<%if report_grouped[:skip].nil?%>
+No skipped issues.
+<%else%>
+<details>
+<summary>Skipped Issues</summary>
+
+<%=render('failures',binding,{
+    topleft: 'Skipped',
+    grouped: report_grouped[:skip]
+             .group_by { |f| f[:@path] }
+             .transform_values { |v| v.group_by { |f| f[:@check_name] }}
+})%>
+
+</details>
+<%end%>
+

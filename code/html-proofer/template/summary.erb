@@ -1,0 +1,16 @@
+![](https://img.shields.io/static/v1?color=<%=
+  stats.key?(:main) ? 'red' : 'green'
+%>&label=tests&message=<%=
+  stats.key?(:main) ? stats[:main] : 0
+%>%20failed%2C%20<%=
+  stats.key?(:skip) ? stats[:skip] : 0
+%>20skipped")
+![](https://img.shields.io/static/v1?color=lightgray&label=translation&message=<%=
+  stats.key?(:translation) ? stats[:translation] : 0%>%20missing")
+
+| Report | Failure count |
+| -- | -- |
+| [❌ Failure](#failure) | <%=stats.key?(:main) ? stats[:main] : 0%> |
+| [🌏 Translation](#translation) | <%=stats.key?(:translation) ? stats[:translation] : 0%> |
+| [✖️ Skipped](#skipped) | <%=stats.key?(:skip) ? stats[:skip] : 0%> |
+

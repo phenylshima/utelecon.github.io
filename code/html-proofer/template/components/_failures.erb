@@ -1,0 +1,23 @@
+
+<%=
+  render('table',binding,{
+    cols: Hash[
+      grouped
+           .each_with_object(Set[]) { |(_k, v), o| o.merge(v.keys) }
+           .map
+           .with_index { |c, idx| [c, idx] }
+    ]
+  })
+%>
+
+<%grouped.each do |filename,v|%>
+<h2 id="<%=v.object_id%>"><a href="#<%=v.object_id%>"><%=filename%></a></h2>
+
+<%v.each do |name,failures|%>
+  <%-%><h4 id="<%=failures.object_id%>"><a href="#<%=failures.object_id%>"><%=name%></a></h4>
+
+  <%-failures.each do |failure|-%><%=
+    render('failure',binding)
+  -%><%-end-%>
+<%end%>
+<%end%>
