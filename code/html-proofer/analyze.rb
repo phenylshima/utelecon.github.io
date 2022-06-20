@@ -53,6 +53,24 @@ def group_failures(report)
   end
 end
 
+def get_annotations(failures)
+  path_dict = JSON.parse(File.read('_report/path.json')).transform_keys { |k| remove_en_index_ext(k, '_site', false) }
+  changed_files = JSON.parse(File.read('_report/changed_files.json')).map { |str| "/#{str}" }
+  filtered = failures.select do |failure|
+    changed_files.include?(failure[:@path]) && path_dict.key?(failure[:@path])
+  end
+  filtered[0..50].map do |failure|
+    {
+      path: path_dict[failure[:@path]],
+      start_line: 0,
+      end_line: 0,
+      annotation_level: 'failure',
+      message: failure[:@description],
+      title: failure[:@check_name]
+    }
+  end
+end
+
 class Report
   def initialize
     @render_id = 0
@@ -116,7 +134,8 @@ File.open('_report/all.json', 'r') do |file|
   report = {
     title: 'HTML Link/Image/Script Check',
     summary: md.generate_summary(stats).byteslice(0, 65_535).scrub(''),
-    text: md.generate_text(report_grouped).byteslice(0, 65_535).scrub('')
+    text: md.generate_text(report_grouped).byteslice(0, 65_535).scrub(''),
+    annotations: get_annotations(report_grouped[:main])
   }
 
   FileUtils.makedirs('_report/github')
