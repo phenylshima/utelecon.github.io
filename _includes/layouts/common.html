@@ -14,7 +14,7 @@
     <meta charset="UTF-8">
 
     {% if jekyll.environment == "development" %}
-    <!--html-proofer:{{ page.check }}-->
+    <!--html-proofer:{check:{{ page.check }},path:"{{ page.path }}"}-->
     {% endif %}
 
     <meta property="og:type" content="website">

@@ -18,9 +18,6 @@ jobs:
       uses: jitterbit/get-changed-files@v1
       with:
         format: 'json'
-    - run: |
-        mkdir -p _report
-        echo '${{ steps.files.outputs.added_modified }}'>_report/changed_files.json
 
     - name: Cache bundle gems
       uses: actions/cache@v2
@@ -41,7 +38,9 @@ jobs:
     - name: Run html-proofer
       run: bundle exec ruby code/html-proofer/run.rb
     - name: Generate md files
-      run: bundle exec ruby code/html-proofer/analyze.rb
+      run: |
+        echo '${{ steps.files.outputs.added_modified }}'>_report/changed_files.json
+        bundle exec ruby code/html-proofer/analyze.rb
     - uses: actions/upload-artifact@v3
       with:
         name: report
