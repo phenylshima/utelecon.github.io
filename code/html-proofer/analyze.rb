@@ -55,9 +55,9 @@ end
 
 def get_annotations(failures)
   path_dict = JSON.parse(File.read('_report/path.json')).transform_keys { |k| remove_en_index_ext(k, '_site', false) }
-  changed_files = JSON.parse(File.read('_report/changed_files.json')).map { |str| "/#{str}" }
+  changed_files = JSON.parse(File.read('_report/changed_files.json'))
   filtered = failures.select do |failure|
-    changed_files.include?(failure[:@path]) && path_dict.key?(failure[:@path])
+    path_dict.key?(failure[:@path]) && changed_files.include?(path_dict[failure[:@path]])
   end
   filtered[0..50].map do |failure|
     {
