@@ -6,15 +6,19 @@ require 'fileutils'
 require_relative 'check/utelecon_domain'
 
 class CustomRunner < HTMLProofer::Runner
+  URL_TYPES = %i[external internal realpath].freeze
+
   def initialize(src, opts)
     super
-    @path_dict = {}
+    CustomRunner.superclass.const_set(:URL_TYPES, URL_TYPES)
+    @realpath_urls = {}
   end
 
   def report_failed_checks; end
 
   def check_parsed(path, source)
     should_check = true
+    real = {}
     @html.xpath('/html/head/comment()').each do |node|
       text = node.text.strip
       next unless text.start_with?('html-proofer:')
@@ -23,14 +27,17 @@ class CustomRunner < HTMLProofer::Runner
       next if parse.nil? || !parse.names.include?('bool')
 
       should_check = false if parse[:bool] != 'true'
-      @path_dict[path] = parse[:path] if parse.names.include?('path') && !path.empty?
+      real[path] = [parse[:path]] if parse.names.include?('path') && !path.empty?
 
       break
     end
     if should_check
-      super
+      res = super
+      res[:realpath_urls] = real
+      res
     else
       { internal_urls: {}, external_urls: {},
+        realpath_urls: real,
         failures: [
           HTMLProofer::Failure.new(path, 'Flag', '')
         ] }
@@ -69,6 +76,6 @@ File.open('_report/external.json', 'w') do |file|
 end
 
 File.open('_report/path.json', 'w') do |file|
-  path_dict = proofer.instance_variable_get('@path_dict')
+  path_dict = proofer.instance_variable_get('@realpath_urls').transform_values { |v| v[0] }
   file.write(JSON[path_dict])
 end
