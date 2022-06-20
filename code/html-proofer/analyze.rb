@@ -5,6 +5,7 @@ require 'json'
 require 'cgi/escape'
 require 'uri'
 require 'erb'
+require 'fileutils'
 require_relative './message'
 
 def remove_en_index_ext(url, prefix = '', en = true)
@@ -68,7 +69,7 @@ class Report
 
   def generate_text(report_grouped)
     ERB.new(
-      File.read('code/html-proofer/template/detail.erb'),
+      File.read('code/html-proofer/template/text.erb'),
       trim_mode: '-'
     ).result(binding)
   end
@@ -112,10 +113,13 @@ File.open('_report/all.json', 'r') do |file|
 
   md = Report.new
 
-  md_summary = md.generate_summary(stats)
-  File.write('_report/summary.md', md_summary)
+  report = {
+    title: 'HTML Link/Image/Script Check',
+    summary: md.generate_summary(stats).byteslice(0, 65_535).scrub(''),
+    text: md.generate_text(report_grouped).byteslice(0, 65_535).scrub('')
+  }
 
-  md_text = md.generate_text(report_grouped)
-
-  File.write('_report/report.md', md_text.byteslice(0, 65_000).scrub(''))
+  FileUtils.makedirs('_report/github')
+  # File.write('_report/html-proofer.md', "#{report[:summary]}\n\n#{report[:text]}")
+  File.write('_report/github/html-proofer.json', JSON[report])
 end

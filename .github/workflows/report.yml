@@ -36,17 +36,13 @@ jobs:
       with:
         script: |
           let fs = require('fs');
-          const name = 'HTML Link/Image/Script Check';
+          const output = JSON.parse(fs.readFileSync('_report/github/html-proofer.md', 'utf-8'));
           let uploadResult = await github.rest.checks.create({
             head_sha: context.sha,
-            name,
+            name: output.title,
             conclusion: 'neutral',
             status: 'completed',
-            output: {
-              title: name,
-              summary: fs.readFileSync('_report/summary.md', 'utf-8'),
-              text: fs.readFileSync('_report/report.md', 'utf-8')
-            },
+            output,
             ...context.repo
           })
           core.info(`Check run status: ${uploadResult.status}`)
