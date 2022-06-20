@@ -44,7 +44,7 @@ proofer = CustomRunner.new(['./_site'], {
                            })
 proofer.run
 
-FileUtils.remove_entry_secure('_report', **{ force: true })
+# FileUtils.remove_entry_secure('_report', **{ force: true })
 FileUtils.makedirs('_report')
 
 File.open('_report/all.json', 'w') do |file|
