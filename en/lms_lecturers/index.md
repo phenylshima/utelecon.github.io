@@ -29,6 +29,7 @@ title: How to use the Learning Management System ITC-LMS（for instructors）
 * <a href="https://www.ecc.u-tokyo.ac.jp/itc-lms/faq.html">FAQ: ITC-LMS</a>
 * After you log in ITC-LMS, you can download the teacher's manual.
 
+
 ## Subpages list
 * <a href="login" target="">How to log in ITC-LMS</a>  
 * <a href="information" target="">Set the Notifications</a>  
