@@ -35,6 +35,9 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
+          let fs = require('fs');
+          const output = JSON.parse(fs.readFileSync('_report/github/html-proofer.json', 'utf-8'));
+
           let head_sha = context.sha;
           if (context.eventName === 'workflow_run') {
             head_sha = context.payload.workflow_run.head_commit.id;
@@ -42,12 +45,13 @@ jobs:
             head_sha = context.payload.pull_request.head.sha;
           }
 
-          let fs = require('fs');
-          const output = JSON.parse(fs.readFileSync('_report/github/html-proofer.json', 'utf-8'));
+          let conclusion = 'neutral';
+          if (output.annotations.length > 0) conclusion = 'failure';
+
           let uploadResult = await github.rest.checks.create({
             head_sha,
             name: output.title,
-            conclusion: 'neutral',
+            conclusion,
             status: 'completed',
             output,
             ...context.repo
