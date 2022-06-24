@@ -54,8 +54,8 @@ def group_failures(report)
 end
 
 def get_annotations(failures)
-  path_dict = JSON.parse(File.read('_report/path.json')).transform_keys { |k| remove_en_index_ext(k, '_site', false) }
-  changed_files = JSON.parse(File.read('_report/changed_files.json'))
+  path_dict = JSON.parse(File.read('_test/result/path.json')).transform_keys { |k| remove_en_index_ext(k, '_site', false) }
+  changed_files = JSON.parse(File.read('_test/result/changed_files.json'))
   filtered = failures.select do |failure|
     path_dict.key?(failure[:@path]) && changed_files.include?(path_dict[failure[:@path]])
   end
@@ -118,7 +118,7 @@ class Report
   end
 end
 
-File.open('_report/all.json', 'r') do |file|
+File.open('_test/result/all.json', 'r') do |file|
   report = JSON.parse(file.read, symbolize_names: true)
                .map do |f|
     f[:@check_name] = f[:@check_name].intern
@@ -138,7 +138,6 @@ File.open('_report/all.json', 'r') do |file|
     annotations: get_annotations(report_grouped[:main])
   }
 
-  FileUtils.makedirs('_report/github')
-  # File.write('_report/html-proofer.md', "#{report[:summary]}\n\n#{report[:text]}")
-  File.write('_report/github/html-proofer.json', JSON[report])
+  FileUtils.makedirs('_test/result/github')
+  File.write('_test/result/github/html-proofer.json', JSON[report])
 end

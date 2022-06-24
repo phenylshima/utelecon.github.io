@@ -19,5 +19,6 @@ vendor/
 *~
 .vscode/
 
-# html-proofer
-_report/
+# Markdown & HTML Test
+_test/result
+_test/node_modules

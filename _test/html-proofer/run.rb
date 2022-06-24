@@ -58,9 +58,9 @@ proofer = CustomRunner.new(['./_site'], {
 proofer.run
 
 # FileUtils.remove_entry_secure('_report', **{ force: true })
-FileUtils.makedirs('_report')
+FileUtils.makedirs('_test/result')
 
-File.open('_report/all.json', 'w') do |file|
+File.open('_test/result/all.json', 'w') do |file|
   failures = proofer.failed_checks.map do |failure|
     failure
       .instance_variables
@@ -70,12 +70,12 @@ File.open('_report/all.json', 'w') do |file|
   file.write(JSON[failures])
 end
 
-File.open('_report/external.json', 'w') do |file|
+File.open('_test/result/external.json', 'w') do |file|
   external = proofer.instance_variable_get('@external_urls')
   file.write(JSON[external])
 end
 
-File.open('_report/path.json', 'w') do |file|
+File.open('_test/result/path.json', 'w') do |file|
   path_dict = proofer.instance_variable_get('@realpath_urls').transform_values { |v| v[0] }
   file.write(JSON[path_dict])
 end

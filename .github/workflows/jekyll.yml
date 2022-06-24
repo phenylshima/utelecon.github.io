@@ -30,19 +30,21 @@ jobs:
           ${{ runner.os }}-
     - name: Set up Ruby 3.1
       uses: ruby/setup-ruby@v1
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
       with:
         ruby-version: 3.1.1
         bundler-cache: true
     - name: Run jekyll
       run: JEKYLL_ENV=development bundle exec jekyll build
     - name: Run html-proofer
-      run: bundle exec ruby code/html-proofer/run.rb
+      run: bundle exec ruby _test/html-proofer/run.rb
     - name: Generate md files
       run: |
-        echo '${{ steps.files.outputs.added_modified }}'>_report/changed_files.json
-        bundle exec ruby code/html-proofer/analyze.rb
+        echo '${{ steps.files.outputs.added_modified }}'>_test/result/changed_files.json
+        bundle exec ruby _test/html-proofer/analyze.rb
     - uses: actions/upload-artifact@v3
       with:
         name: report
-        path: _report
+        path: _test/result
 
