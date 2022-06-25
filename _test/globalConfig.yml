@@ -1,0 +1,40 @@
+changed_files:
+  output:
+    base: _test/result
+    files:
+      changed_files: changed-files.json
+
+markdownlint:
+  code:
+    base: _test/markdownlint
+    config: config.yml
+  output:
+    base: _test/result/markdownlint
+    files:
+      report: markdownlint.json
+
+html_proofer:
+  code: 
+    site: _site
+    skip:
+      - link_http
+      - link_dir_no_slash
+  output:
+    base: _test/result/html-proofer
+    files:
+      failures: failures.json
+      external: external.json
+      path: path.json
+
+generate_report:
+  code:
+    base: _test/generate-report
+    templates:
+      summary: template/summary.erb
+      text: template/text.erb
+      components: template/components/
+  output:
+    base: _test/result/github
+    files:
+      html_proofer: html-proofer.json
+

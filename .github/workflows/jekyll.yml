@@ -41,8 +41,8 @@ jobs:
       run: bundle exec ruby _test/html-proofer/run.rb
     - name: Generate md files
       run: |
-        echo '${{ steps.files.outputs.added_modified }}'>_test/result/changed_files.json
-        bundle exec ruby _test/html-proofer/analyze.rb
+        echo '${{ steps.files.outputs.added_modified }}'>_test/result/changed-files.json
+        bundle exec ruby _test/generate-report/analyze.rb
     - uses: actions/upload-artifact@v3
       with:
         name: report

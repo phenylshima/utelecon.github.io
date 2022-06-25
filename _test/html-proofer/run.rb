@@ -4,6 +4,7 @@ require 'html_proofer'
 require 'json'
 require 'fileutils'
 require_relative 'check/utelecon_domain'
+require_relative '../utils/config'
 
 class CustomRunner < HTMLProofer::Runner
   URL_TYPES = %i[external internal realpath].freeze
@@ -43,9 +44,15 @@ class CustomRunner < HTMLProofer::Runner
         ] }
     end
   end
+
+  def realpath(path)
+    @realpath_urls[path]
+  end
 end
 
-proofer = CustomRunner.new(['./_site'], {
+SITE = CONFIG.path(:html_proofer, :code, :site)
+
+proofer = CustomRunner.new([SITE], {
                              type: :directory,
                              disable_external: true,
                              ignore_missing_alt: true,
@@ -57,25 +64,22 @@ proofer = CustomRunner.new(['./_site'], {
                            })
 proofer.run
 
-# FileUtils.remove_entry_secure('_report', **{ force: true })
-FileUtils.makedirs('_test/result')
+OUTPUTCONFIG = CONFIG.partial(:html_proofer, :output, :files)
 
-File.open('_test/result/all.json', 'w') do |file|
+File.open(OUTPUTCONFIG.path(:failures), 'w') do |file|
   failures = proofer.failed_checks.map do |failure|
-    failure
-      .instance_variables
-      .map { |sym| [sym, failure.instance_variable_get(sym)] }
-      .to_h
+    f = failure
+        .instance_variables
+        .map { |sym| [sym[1..].intern, failure.instance_variable_get(sym)] }
+        .to_h
+    f[:realpath] = proofer.realpath(f[:path])
+    f[:path] = f[:path][SITE.size..] if !f[:path].nil? && f[:path].start_with?(SITE)
+    f
   end
   file.write(JSON[failures])
 end
 
-File.open('_test/result/external.json', 'w') do |file|
+File.open(OUTPUTCONFIG.path(:external), 'w') do |file|
   external = proofer.instance_variable_get('@external_urls')
   file.write(JSON[external])
-end
-
-File.open('_test/result/path.json', 'w') do |file|
-  path_dict = proofer.instance_variable_get('@realpath_urls').transform_values { |v| v[0] }
-  file.write(JSON[path_dict])
 end

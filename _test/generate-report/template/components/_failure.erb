@@ -1,0 +1,4 @@
+- <%=failure[:description] -%>
+<%- unless failure[:line].nil?%> (L<%=failure[:line]%>)<%end-%>
+<%- if c=content_sanitize(failure[:content]) -%> `<%=c%>`<%-end-%>
+

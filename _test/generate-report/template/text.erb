@@ -12,7 +12,7 @@
 <details><summary>Files not checked</summary>
 
 <% report_grouped[:flag].each do |not_checked| %>
-- <%= not_checked[:@path] -%>
+- <%= not_checked[:path] -%>
 <% end %>
 
 </details>
@@ -28,8 +28,8 @@
 <%=render('failures',binding,{
     topleft: 'Failures',
     grouped: report_grouped[:main]
-             .group_by { |f| f[:@path] }
-             .transform_values { |v| v.group_by { |f| f[:@check_name] }}
+             .group_by { |f| f[:path] }
+             .transform_values { |v| v.group_by { |f| f[:check_name] }}
 })%>
 
 <%end%>
@@ -41,7 +41,7 @@
 <details>
 <summary>Pages without translation</summary>
 <% report_grouped[:translation].each do |translation| %>
-- <%= translation[:@path] -%>
+- <%= translation[:path] -%>
 <% end %>
 </details>
 <%end%>
@@ -56,8 +56,8 @@ No skipped issues.
 <%=render('failures',binding,{
     topleft: 'Skipped',
     grouped: report_grouped[:skip]
-             .group_by { |f| f[:@path] }
-             .transform_values { |v| v.group_by { |f| f[:@check_name] }}
+             .group_by { |f| f[:path] }
+             .transform_values { |v| v.group_by { |f| f[:check_name] }}
 })%>
 
 </details>

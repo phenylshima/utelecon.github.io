@@ -7,12 +7,17 @@ require 'uri'
 require 'erb'
 require 'fileutils'
 require_relative './message'
+require_relative '../utils/config'
 
-def remove_en_index_ext(url, prefix = '', en = true)
-  arr = url.split('/')
-  arr.shift if arr[0] == ''
+HTMLPROOFERCONFIG = CONFIG.partial(:html_proofer, :output, :files)
+CHANGEDFILESCONFIG = CONFIG.partial(:changed_files, :output, :files)
+REPORTCONFIG = CONFIG.partial(:generate_report, :output, :files)
+TEMPLATECONFIG = CONFIG.partial(:generate_report, :code, :templates)
+MESSAGE_SKIP = CONFIG.get(:html_proofer, :code, :skip).map(&:intern)
+
+def remove_en_index_ext(url, en = true)
+  arr = url.split('/').reject { |e| e.strip.empty? }
   arr.shift if arr[0] == '.'
-  arr.shift if arr[0] == prefix
   arr.shift if en && arr[0] == 'en'
 
   return '/' if arr.size.zero?
@@ -29,17 +34,17 @@ end
 
 def group_failures(report)
   report.group_by do |failure|
-    category = failure[:@check_name]
-    key = find_message(category, failure[:@description])
+    category = failure[:check_name]
+    key = find_message(category, failure[:description])
 
     case key
     when :unknown_category
-      puts "Unknown Category: #{failure[:@check_name]}"
+      puts "Unknown Category: #{failure[:check_name]}"
     when :unknown_message
-      puts "Unknown Message: #{failure[:@check_name]}/#{failure[:@description]}"
+      puts "Unknown Message: #{failure[:check_name]}/#{failure[:description]}"
     when :internal_not_exist
-      path = remove_en_index_ext(failure[:@path])
-      url = remove_en_index_ext(get_arguments(category, key, failure[:@description])[0])
+      path = remove_en_index_ext(failure[:path])
+      url = remove_en_index_ext(get_arguments(category, key, failure[:description])[0])
       next :translation if path == url
       next :translation if path == URI.decode_www_form_component(url)
     when :flag
@@ -54,19 +59,18 @@ def group_failures(report)
 end
 
 def get_annotations(failures)
-  path_dict = JSON.parse(File.read('_test/result/path.json')).transform_keys { |k| remove_en_index_ext(k, '_site', false) }
-  changed_files = JSON.parse(File.read('_test/result/changed_files.json'))
+  changed_files = JSON.parse(File.read(CHANGEDFILESCONFIG.path(:changed_files)))
   filtered = failures.select do |failure|
-    path_dict.key?(failure[:@path]) && changed_files.include?(path_dict[failure[:@path]])
+    !failure[:realpath].nil? && changed_files.include?(failure[:realpath][0])
   end
   filtered[0..50].map do |failure|
     {
-      path: path_dict[failure[:@path]],
+      path: failure[:realpath][0],
       start_line: 0,
       end_line: 0,
       annotation_level: 'failure',
-      message: failure[:@description],
-      title: failure[:@check_name]
+      message: failure[:description],
+      title: failure[:check_name]
     }
   end
 end
@@ -80,20 +84,20 @@ class Report
 
   def generate_summary(stats)
     ERB.new(
-      File.read('code/html-proofer/template/summary.erb'),
+      File.read(TEMPLATECONFIG.path(:summary)),
       trim_mode: '-'
     ).result(binding)
   end
 
   def generate_text(report_grouped)
     ERB.new(
-      File.read('code/html-proofer/template/text.erb'),
+      File.read(TEMPLATECONFIG.path(:text)),
       trim_mode: '-'
     ).result(binding)
   end
 
   def render(file, bind, vars = {})
-    path = File.join('code/html-proofer/template/components/', "_#{file}.erb")
+    path = File.join(TEMPLATECONFIG.path(:components), "_#{file}.erb")
     erb = ERB.new(File.read(path), eoutvar: "res_#{@render_id += 1}", trim_mode: '-')
     vars.each do |k, v|
       bind.local_variable_set(k, v)
@@ -118,11 +122,11 @@ class Report
   end
 end
 
-File.open('_test/result/all.json', 'r') do |file|
+File.open(HTMLPROOFERCONFIG.path(:failures), 'r') do |file|
   report = JSON.parse(file.read, symbolize_names: true)
                .map do |f|
-    f[:@check_name] = f[:@check_name].intern
-    f[:@path] = remove_en_index_ext(f[:@path], '_site', false)
+    f[:check_name] = f[:check_name].intern
+    f[:path] = remove_en_index_ext(f[:path], false)
     f
   end
   report_grouped = group_failures(report)
@@ -138,6 +142,5 @@ File.open('_test/result/all.json', 'r') do |file|
     annotations: get_annotations(report_grouped[:main])
   }
 
-  FileUtils.makedirs('_test/result/github')
-  File.write('_test/result/github/html-proofer.json', JSON[report])
+  File.write(REPORTCONFIG.path(:html_proofer), JSON[report])
 end

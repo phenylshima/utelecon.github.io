@@ -58,11 +58,6 @@ MESSAGES = {
   }
 }.freeze
 
-MESSAGE_SKIP = %i[
-  link_http
-  link_dir_no_slash
-].freeze
-
 # Finds message from MESSAGES
 def find_message(category, msg)
   return :unknown_category unless MESSAGES.key?(category)

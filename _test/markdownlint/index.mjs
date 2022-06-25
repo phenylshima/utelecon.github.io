@@ -1,29 +1,32 @@
 import markdownlint from "markdownlint"
 import { globby } from "globby"
 import fs from "fs/promises"
-import path from "path"
-import { load as loadyaml } from "js-yaml"
+import * as yaml from "js-yaml"
+import { getConfig, repobase } from "../utils/config.mjs"
 
 
 (async () => {
-  const __dirname = path.dirname(new URL(import.meta.url).pathname.replace(/^(\/|\\)/, ''));
-  const base = path.posix.join(__dirname, '../../');
-  process.chdir(base);
-
-  const files = await globby(['.', `!{.,_,#,~}*/**`], {
+  const files = await globby(['.', `!{.,_,#,~}*/`], {
     expandDirectories: {
       extensions: ['markdown', 'mkdown', 'mkdn', 'mkd', 'md']
     },
-    gitignore: true
+    gitignore: true,
+    cwd: repobase,
+    absolute: true
   });
+
+  const config = (await getConfig()).partial('markdownlint')
 
   const result = await markdownlint.promises.markdownlint({
     files,
     config: await markdownlint.promises.readConfig(
-      '_test/markdownlint/config.yml',
-      [loadyaml]
+      await config.path('code', 'config'),
+      [yaml.load]
     )
   });
 
-  await fs.writeFile('_test/result/markdownlint.json', JSON.stringify(result));
+  await fs.writeFile(
+    await config.path('output', 'files', 'report'),
+    JSON.stringify(result)
+  );
 })()
