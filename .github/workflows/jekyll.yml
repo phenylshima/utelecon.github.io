@@ -27,10 +27,16 @@ jobs:
         ruby-version: 3.1.1
         bundler-cache: true
     - name: Run jekyll
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
       run: JEKYLL_ENV=development bundle exec jekyll build
     - name: Run html-proofer
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
       run: bundle exec ruby _test/html-proofer/run.rb
     - name: Generate md files
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
       run: |
         echo '${{ steps.files.outputs.added_modified }}'>_test/result/changed-files.json
         bundle exec ruby _test/generate-report/analyze.rb
