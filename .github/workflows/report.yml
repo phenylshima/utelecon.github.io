@@ -36,7 +36,7 @@ jobs:
       with:
         script: |
           let fs = require('fs');
-          const output = JSON.parse(fs.readFileSync('report/github/html-proofer.json', 'utf-8'));
+          const output = JSON.parse(fs.readFileSync('github/html-proofer.json', 'utf-8'));
 
           let head_sha = context.sha;
           if (context.eventName === 'workflow_run') {
