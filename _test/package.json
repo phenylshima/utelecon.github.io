@@ -4,13 +4,15 @@
   "description": "Checks utelecon markdown files",
   "main": "markdownlint/index.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node markdownlint/index.mjs"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "globby": "^13.1.2",
     "js-yaml": "^4.1.0",
-    "markdownlint": "^0.26.0"
+    "markdownlint": "^0.26.0",
+    "markdownlint-rule-helpers": "^0.17.0"
   }
 }
