@@ -144,7 +144,7 @@ class Reporter
         end_line: failure.end_line,
         start_column: failure.start_column,
         end_column: failure.end_column,
-        annotaion_level: failure.annotaion_level,
+        annotation_level: failure.annotaion_level,
         message: failure.message,
         title: failure.title,
         raw_details: failure.raw_details
