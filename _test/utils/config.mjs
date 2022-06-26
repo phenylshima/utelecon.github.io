@@ -1,8 +1,9 @@
 import * as yaml from "js-yaml"
 import fs from 'fs/promises'
 import path from "path";
+import url from 'url';
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname.replace(/^(\/|\\)/, ''));
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export async function getConfig() {
   const configPath = path.join(__dirname, '../globalConfig.yml')

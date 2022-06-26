@@ -24,7 +24,6 @@ html_proofer:
     files:
       failures: failures.json
       external: external.json
-      path: path.json
 
 generate_report:
   code:
@@ -37,4 +36,5 @@ generate_report:
     base: _test/result/github
     files:
       html_proofer: html-proofer.json
+      markdownlint: markdownlint.json
 

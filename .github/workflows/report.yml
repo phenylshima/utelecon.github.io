@@ -35,8 +35,8 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          let fs = require('fs');
-          const output = JSON.parse(fs.readFileSync('github/html-proofer.json', 'utf-8'));
+          const fs = require('fs/promises');
+          const path = require('path');
 
           let head_sha = context.sha;
           if (context.eventName === 'workflow_run') {
@@ -45,17 +45,21 @@ jobs:
             head_sha = context.payload.pull_request.head.sha;
           }
 
-          let conclusion = 'neutral';
-          if (output.annotations.length > 0) conclusion = 'failure';
+          (await fs.readdir('github'))
+            .forEach(async filename => {
+              const output = JSON.parse(await fs.readFile(path.join('github', filename), 'utf-8'));
 
-          let uploadResult = await github.rest.checks.create({
-            head_sha,
-            name: output.title,
-            conclusion,
-            status: 'completed',
-            output,
-            ...context.repo
-          })
-          core.info(`Check run status: ${uploadResult.status}`)
-          core.info(`Check run URL: ${uploadResult.data.url}`)
-          core.info(`Check run HTML: ${uploadResult.data.html_url}`)
+              let uploadResult = await github.rest.checks.create({
+                head_sha,
+                name: output.title,
+                conclusion: output.annotations.length > 0 ? 'failure' : 'neutral',
+                status: 'completed',
+                output,
+                ...context.repo
+              })
+              core.info(`Check run '${filename}'`)
+              core.info(`  Status: ${uploadResult.status}`)
+              core.info(`  URL: ${uploadResult.data.url}`)
+              core.info(`  HTML: ${uploadResult.data.html_url}`)
+            })
+
