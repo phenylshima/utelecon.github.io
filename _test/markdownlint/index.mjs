@@ -27,6 +27,13 @@ import { getConfig, repobase } from "../utils/config.mjs"
 
   await fs.writeFile(
     await config.path('output', 'files', 'report'),
-    JSON.stringify(result)
+    JSON.stringify(
+      Object.entries(result).map(([path, errs]) => errs.map(e => (
+        {
+          ...e,
+          path: path.substring(repobase.length)
+        }
+      ))).flat()
+    )
   );
 })()

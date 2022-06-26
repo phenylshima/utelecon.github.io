@@ -14,10 +14,28 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - id: files
-      uses: Ana06/get-changed-files@v2.1.0
+    - uses: Ana06/get-changed-files@v2.1.0
+      id: files
       with:
         format: 'json'
+
+    - name: Setup Node 16
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+        cache: 'npm'
+        cache-dependency-path: _test/package-lock.json
+    - uses: actions/cache@v3
+      id: node_modules_cache_id
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: '_test/node_modules'
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+    - if: ${{ steps.node_modules_cache_id.outputs.cache-hit != 'true' }}
+      run: npm --prefix _test ci
+    - name: Run markdownlint
+      run: npm --prefix _test run start
 
     - name: Set up Ruby 3.1
       uses: ruby/setup-ruby@v1
