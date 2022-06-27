@@ -29,7 +29,7 @@ end
 
 MESSAGE_SKIP = CONFIG.get(:html_proofer, :code, :skip).map(&:intern)
 
-# ERBContext for html-proofer
+# ERBContext for html-proofer(We need this to pass MESSAGE_SKIP to ERB templates)
 class HTMLProoferERBContext < ERBContext; end
 
 # Report generator for html-proofer

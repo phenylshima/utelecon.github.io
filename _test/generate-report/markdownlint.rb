@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'yaml'
 require_relative 'base'
 require_relative '../utils/config'
 
@@ -15,39 +16,27 @@ class MarkdownlintFailure < CommonFailure
   end
 
   def start_line
-    if @data[:fixInfo] && @data[:fixInfo][:lineNumber] && @data[:lineNumber]
-      [@data[:lineNumber], @data[:fixInfo][:lineNumber]].min
-    else
-      @data[:lineNumber]
-    end
+    @data[:lineNumber]
   end
 
   def end_line
-    if @data[:fixInfo] && @data[:fixInfo][:lineNumber] && @data[:lineNumber]
-      [@data[:lineNumber], @data[:fixInfo][:lineNumber]].max
-    else
-      @data[:lineNumber]
-    end
+    @data[:lineNumber]
   end
 
   def start_column
-    return nil if @data[:errorRange].nil? || @data[:errorRange][0].nil?
+    return nil unless @data[:errorRange].is_a?(Array)
 
     @data[:errorRange].min
   end
 
   def end_column
-    return nil if @data[:errorRange].nil? || @data[:errorRange][0].nil?
+    return nil unless @data[:errorRange].is_a?(Array)
 
     @data[:errorRange].max
   end
 
   def message
-    if @data[:errorDetail].nil?
-      @data[:ruleDescription]
-    else
-      @data[:errorDetail]
-    end
+    "#{@data[:ruleDescription]}(#{@data[:ruleInformation]})\n#{@data[:errorDetail]}"
   end
 
   def title
@@ -55,7 +44,7 @@ class MarkdownlintFailure < CommonFailure
   end
 
   def raw_details
-    JSON[@data]
+    YAML.dump(@data)
   end
 end
 
