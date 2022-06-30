@@ -52,7 +52,7 @@ jobs:
               let uploadResult = await github.rest.checks.create({
                 head_sha,
                 name: output.title,
-                conclusion: output.annotations.length > 0 ? 'failure' : 'neutral',
+                conclusion: (output.annotations ?? []).length > 0 ? 'failure' : 'neutral',
                 status: 'completed',
                 output,
                 ...context.repo
