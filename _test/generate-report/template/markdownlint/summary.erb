@@ -1,5 +1,5 @@
 | Rule | Number of failures |
 | -- | -- |
-<% report_grouped[:main].group_by(&:title).each do |title, failures| -%>
+<% report_grouped[:main].group_by(&:title).sort.each do |title, failures| -%>
 | <%=title%> | <%=failures.size%> |
 <%end%>
