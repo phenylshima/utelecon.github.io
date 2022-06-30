@@ -30,17 +30,6 @@ class ERBContext
     @id_hash[obj] = "id-#{@id_seq += 1}" unless @id_hash.key?(obj)
     @id_hash[obj]
   end
-
-  def content_sanitize(content)
-    return nil if content.nil?
-
-    escaped = CGI.escapeHTML(content.gsub("\n", '\n'))
-    if escaped.strip.size.zero?
-      nil
-    else
-      escaped
-    end
-  end
 end
 
 # Represents a failure in a common format
@@ -79,6 +68,15 @@ class CommonFailure
 
   def title; end
   def raw_details; end
+
+  def to_markdown
+    line = if start_line.nil? || start_line.zero?
+             nil
+           else
+             start_line == end_line ? "(L#{start_line})" : "(L#{start_line}-#{end_line})"
+           end
+    "#{message}#{line}"
+  end
 end
 
 # options
@@ -88,7 +86,6 @@ end
 #   annotation_failures: Failure category used to generate annotation(Symbol[])
 #   changed_files: List of changed files(String[])
 #   erb_context: Context for ERB(ERBContext)
-#   failure_converter: Class extending CommonFailure(<CommonFailure)
 # report_grouped: Hash of kind of Failure(String) and list of Failure(Failure[])
 
 # Class to generate report
@@ -103,7 +100,7 @@ class Reporter
       summary: generate_summary(report_grouped).byteslice(0, 65_535).scrub(''),
       text: generate_text(report_grouped).byteslice(0, 65_535).scrub(''),
       annotations: generate_annotations(report_grouped)
-    }
+    }.reject { |k, v| !%i[title summary].include?(k) && (v.nil? || v.size.zero?) }
   end
 
   def generate_summary(report_grouped)
@@ -126,13 +123,11 @@ class Reporter
 
   def generate_annotations(report_grouped)
     if report_grouped[@options[:annotation_failures]].nil? \
-       || @options[:changed_files].nil? \
-       || @options[:failure_converter].nil?
+       || @options[:changed_files].nil?
       return []
     end
 
     filtered = report_grouped[@options[:annotation_failures]]
-               .map { |failure| @options[:failure_converter].new(failure) }
                .select do |failure|
       failure.valid? && @options[:changed_files].include?(failure.path)
     end

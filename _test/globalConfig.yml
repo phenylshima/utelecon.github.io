@@ -29,9 +29,15 @@ generate_report:
   code:
     base: _test/generate-report
     templates:
-      summary: template/summary.erb
-      text: template/text.erb
-      components: template/components/
+      base: template/
+      html_proofer:
+        base: html_proofer/
+        summary: summary.erb
+        text: text.erb
+      markdownlint:
+        base: markdownlint/
+        summary: summary.erb
+      components: components/
   output:
     base: _test/result/github
     files:

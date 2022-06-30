@@ -8,12 +8,17 @@ require_relative '../utils/config'
 
 # Failure from HTMLProofer
 class HTMLProoferFailure < CommonFailure
+  def initialize(data)
+    data[:check_name] = data[:check_name].intern
+    super(data)
+  end
+
   def valid?
     !path.size.zero?
   end
 
   def path
-    '' if @data[:realpath].nil? || @data[:realpath][0].nil?
+    return '' if @data[:realpath].nil? || @data[:realpath][0].nil?
 
     @data[:realpath][0]
   end
@@ -24,6 +29,22 @@ class HTMLProoferFailure < CommonFailure
 
   def title
     @data[:check_name]
+  end
+
+  def to_markdown
+    sanitized = content_sanitize(@data[:content])
+    "#{super}#{sanitized.nil? || sanitized.strip.size.zero? ? nil : " `#{sanitized}`"}"
+  end
+
+  def content_sanitize(content)
+    return nil if content.nil?
+
+    escaped = CGI.escapeHTML(content.gsub("\n", '\n'))
+    if escaped.strip.size.zero?
+      nil
+    else
+      escaped
+    end
   end
 end
 
@@ -40,22 +61,18 @@ class HTMLProoferReporter < Reporter
   def initialize(changed_files)
     super({
       title: 'HTML Check',
-      summary: TEMPLATECONFIG.path(:summary),
-      text: TEMPLATECONFIG.path(:text),
+      summary: TEMPLATECONFIG.path(:html_proofer, :summary),
+      text: TEMPLATECONFIG.path(:html_proofer, :text),
       annotation_failures: :main,
       changed_files: changed_files,
-      erb_context: HTMLProoferERBContext.new(TEMPLATECONFIG.path(:components)),
-      failure_converter: HTMLProoferFailure
+      erb_context: HTMLProoferERBContext.new(TEMPLATECONFIG.path(:components))
     })
   end
 
   def generate_report
     file = File.read(HTMLPROOFERCONFIG.path(:failures))
     report = JSON.parse(file, symbolize_names: true)
-                 .map do |f|
-      f[:check_name] = f[:check_name].intern
-      f
-    end
+                 .map { |f| HTMLProoferFailure.new(f) }
     report_grouped = group_failures(report)
     super(report_grouped)
   end
@@ -79,17 +96,17 @@ class HTMLProoferReporter < Reporter
 
   def group_failures(report)
     report.group_by do |failure|
-      category = failure[:check_name]
-      key = find_message(category, failure[:description])
+      category = failure.title
+      key = find_message(category, failure.message)
 
       case key
       when :unknown_category
-        puts "Unknown Category: #{failure[:check_name]}"
+        puts "Unknown Category: #{failure.title}"
       when :unknown_message
-        puts "Unknown Message: #{failure[:check_name]}/#{failure[:description]}"
+        puts "Unknown Message: #{failure.title}/#{failure.message}"
       when :internal_not_exist
-        path = remove_en_index_ext(failure[:path])
-        url = remove_en_index_ext(get_arguments(category, key, failure[:description])[0])
+        path = remove_en_index_ext(failure.path)
+        url = remove_en_index_ext(get_arguments(category, key, failure.message)[0])
         next :translation if path == url
         next :translation if path == URI.decode_www_form_component(url)
       when :flag

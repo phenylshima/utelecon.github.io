@@ -50,20 +50,24 @@ end
 
 # Report generator for markdownlint
 class MarkdownlintReporter < Reporter
+  TEMPLATECONFIG = CONFIG.partial(:generate_report, :code, :templates)
   MARKDOWNLINTCONFIG = CONFIG.partial(:markdownlint, :output, :files)
 
   def initialize(changed_files)
     super({
       title: 'Markdown Check',
+      summary: TEMPLATECONFIG.path(:markdownlint, :summary),
       annotation_failures: :main,
       changed_files: changed_files,
-      failure_converter: MarkdownlintFailure
+      erb_context: ERBContext.new(TEMPLATECONFIG.path(:components))
     })
   end
 
   def generate_report
     file = File.read(MARKDOWNLINTCONFIG.path(:report))
-    report = JSON.parse(file, symbolize_names: true)
+    report = JSON
+             .parse(file, symbolize_names: true)
+             .map { |d| MarkdownlintFailure.new(d) }
     report_grouped = {
       main: report
     }

@@ -16,8 +16,9 @@
 <%v.each do |name,failures|%>
   <%-%><h4 id="<%=id(failures)%>"><a href="#<%=id(failures)%>"><%=name%></a></h4>
 
-  <%-failures.each do |failure|-%><%=
-    render('failure',binding)
-  -%><%-end-%>
+  <%-failures.each do |failure|-%>
+    <%-%>- <%=failure.to_markdown-%>
+  <%-end-%>
+
 <%end%>
 <%end%>
