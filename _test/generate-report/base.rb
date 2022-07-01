@@ -132,7 +132,7 @@ class Reporter
       failure.valid? && @options[:changed_files].include?(failure.path)
     end
 
-    filtered[0..50].map do |failure|
+    filtered.map do |failure|
       {
         path: failure.path,
         start_line: failure.start_line,
