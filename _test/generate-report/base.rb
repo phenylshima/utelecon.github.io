@@ -77,6 +77,20 @@ class CommonFailure
            end
     "#{message}#{line}"
   end
+
+  def to_annotation
+    {
+      path: path,
+      start_line: start_line,
+      end_line: end_line,
+      start_column: start_column,
+      end_column: end_column,
+      annotation_level: annotaion_level,
+      message: message,
+      title: title,
+      raw_details: raw_details
+    }.reject { |_k, v| v.nil? }
+  end
 end
 
 # options
@@ -132,19 +146,7 @@ class Reporter
       failure.valid? && @options[:changed_files].include?(failure.path)
     end
 
-    filtered.map do |failure|
-      {
-        path: failure.path,
-        start_line: failure.start_line,
-        end_line: failure.end_line,
-        start_column: failure.start_column,
-        end_column: failure.end_column,
-        annotation_level: failure.annotaion_level,
-        message: failure.message,
-        title: failure.title,
-        raw_details: failure.raw_details
-      }.reject { |_k, v| v.nil? }
-    end
+    filtered.map(&:to_annotation)
   end
 
   def erb_context(report_grouped)
