@@ -73,6 +73,7 @@ class HTMLProoferReporter < Reporter
     file = File.read(HTMLPROOFERCONFIG.path(:failures))
     report = JSON.parse(file, symbolize_names: true)
                  .map { |f| HTMLProoferFailure.new(f) }
+                 .sort_by(&:path)
     report_grouped = group_failures(report)
     super(report_grouped)
   end
