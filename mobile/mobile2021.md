@@ -1,6 +1,7 @@
 ---
 title: 教育・研究活動のためのネットワーク環境支援2021
  / The network environment support for education and research 2021
+check: false
 ---
 **情報システム本部/ Division for Information and Communication Systems**
 
