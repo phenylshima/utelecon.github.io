@@ -16,10 +16,10 @@ defaults:
       path: ""
     values:
       lang: ja
+      check: true
       image: /assets/images/ogp.png
   -
     scope:
       path: en
     values:
       lang: en
-      image: /assets/images/ogp.png

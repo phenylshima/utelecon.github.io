@@ -1,0 +1,65 @@
+name: Jekyll site CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: Ana06/get-changed-files@v2.1.0
+      id: files
+      with:
+        format: 'json'
+
+    - name: Setup Node 16
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+        cache: 'npm'
+        cache-dependency-path: _test/package-lock.json
+    - uses: actions/cache@v3
+      id: node_modules_cache_id
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: '_test/node_modules'
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+    - if: ${{ steps.node_modules_cache_id.outputs.cache-hit != 'true' }}
+      run: npm --prefix _test ci
+    - name: Run markdownlint
+      run: npm --prefix _test run start
+
+    - name: Set up Ruby 3.1
+      uses: ruby/setup-ruby@v1
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
+      with:
+        ruby-version: 3.1.1
+        bundler-cache: true
+    - name: Run jekyll
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
+      run: JEKYLL_ENV=development bundle exec jekyll build
+    - name: Run html-proofer
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
+      run: bundle exec ruby _test/html-proofer/run.rb
+    - name: Generate md files
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
+      run: |
+        echo '${{ steps.files.outputs.added_modified }}'>_test/result/changed-files.json
+        bundle exec ruby _test/generate-report/main.rb
+    - uses: actions/upload-artifact@v3
+      with:
+        name: report
+        path: _test/result
+

@@ -1,0 +1,24 @@
+
+<%=
+  render('table',binding,{
+    cols: Hash[
+      grouped
+           .each_with_object(Set[]) { |(_k, v), o| o.merge(v.keys) }
+           .map
+           .with_index { |c, idx| [c, idx] }
+    ]
+  })
+%>
+
+<%grouped.each do |filename,v|%>
+<h2 id="<%=id(v)%>"><a href="#<%=id(v)%>"><%=filename%></a></h2>
+
+<%v.each do |name,failures|%>
+  <%-%><h4 id="<%=id(failures)%>"><a href="#<%=id(failures)%>"><%=name%></a></h4>
+
+  <%-failures.each do |failure|-%>
+    <%-%>- <%=failure.to_markdown%>
+  <%-end-%>
+
+<%end%>
+<%end%>
