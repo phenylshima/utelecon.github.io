@@ -17,7 +17,8 @@ vendor/
 .DS_Store
 *.swp
 *~
-.vscode/
+.vscode/*
+!settings.json
 
 # Markdown & HTML Test
 _test/result
