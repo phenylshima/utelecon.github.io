@@ -24,6 +24,7 @@ html_proofer:
     files:
       failures: failures.json
       external: external.json
+      cache: cache.json
 
 generate_report:
   code:

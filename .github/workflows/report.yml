@@ -2,7 +2,7 @@ name: Test Report
 
 on:
   workflow_run:
-    workflows: ['Jekyll site CI']
+    workflows: ['Jekyll site CI', 'External Link Check']
     types:
       - completed
 jobs:

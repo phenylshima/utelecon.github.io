@@ -1,0 +1,49 @@
+name: External Link Check
+
+on: workflow_dispatch
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup dummy files
+      run: |
+        mkdir -p _test/result/markdownlint
+        echo '[]'>_test/result/changed-files.json
+        echo '[]'>_test/result/markdownlint/markdownlint.json
+
+    - uses: actions/cache@v3
+      with:
+        path: '_test/result/html-proofer/cache.json'
+        key: ${{ runner.os }}-build-external-cache
+
+    - name: Set up Ruby 3.1
+      uses: ruby/setup-ruby@v1
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
+      with:
+        ruby-version: 3.1.1
+        bundler-cache: true
+    - name: Run jekyll
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
+      run: JEKYLL_ENV=development bundle exec jekyll build
+    - name: Run html-proofer
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
+      run: bundle exec ruby _test/html-proofer/run.rb --external
+    - name: Generate md files
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/_test/Gemfile
+      run: |
+        bundle exec ruby _test/generate-report/main.rb
+    - uses: actions/upload-artifact@v3
+      with:
+        name: report
+        path: _test/result
+

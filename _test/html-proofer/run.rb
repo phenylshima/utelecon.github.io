@@ -51,20 +51,31 @@ class CustomRunner < HTMLProofer::Runner
 end
 
 SITE = CONFIG.path(:html_proofer, :code, :site)
+OUTPUTCONFIG = CONFIG.partial(:html_proofer, :output, :files)
 
 proofer = CustomRunner.new([SITE], {
                              type: :directory,
-                             disable_external: true,
+                             disable_external: ARGV[0] != '--external',
                              ignore_missing_alt: true,
                              checks: %w[Links Images Scripts UteleconDomain],
                              swap_urls: {
                                %r{^https?://utelecon\.adm\.u-tokyo\.ac\.jp} => '',
                                %r{^https?://utelecon\.github\.io} => ''
+                             },
+                             cache: {
+                               timeframe: {
+                                 external: '30d'
+                               },
+                               cache_file: OUTPUTCONFIG.get(:cache),
+                               storage_dir: File.dirname(OUTPUTCONFIG.path(:cache))
                              }
                            })
-proofer.run
 
-OUTPUTCONFIG = CONFIG.partial(:html_proofer, :output, :files)
+proofer.before_request do |request1|
+  p request1.base_url
+end
+
+proofer.run
 
 File.open(OUTPUTCONFIG.path(:failures), 'w') do |file|
   failures = proofer.failed_checks.map do |failure|
