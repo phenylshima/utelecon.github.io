@@ -1,75 +1,36 @@
 # frozen_string_literal: true
 
-require 'html_proofer'
 require 'json'
 require 'fileutils'
+
+require_relative 'html-proofer/runner'
 require_relative 'check/utelecon_domain'
 require_relative '../utils/config'
-
-class CustomRunner < HTMLProofer::Runner
-  URL_TYPES = %i[external internal realpath].freeze
-
-  def initialize(src, opts)
-    super
-    CustomRunner.superclass.const_set(:URL_TYPES, URL_TYPES)
-    @realpath_urls = {}
-  end
-
-  def report_failed_checks; end
-
-  def check_parsed(path, source)
-    should_check = true
-    real = {}
-    @html.xpath('/html/head/comment()').each do |node|
-      text = node.text.strip
-      next unless text.start_with?('html-proofer:')
-
-      parse = /^html-proofer:\{check:(?<bool>true|false),path:"(?<path>.*)"\}$/.match(text)
-      next if parse.nil? || !parse.names.include?('bool')
-
-      should_check = false if parse[:bool] != 'true'
-      real[path] = [parse[:path]] if parse.names.include?('path') && !path.empty?
-
-      break
-    end
-    if should_check
-      res = super
-      res[:realpath_urls] = real
-      res
-    else
-      { internal_urls: {}, external_urls: {},
-        realpath_urls: real,
-        failures: [
-          HTMLProofer::Failure.new(path, 'Flag', '')
-        ] }
-    end
-  end
-
-  def realpath(path)
-    @realpath_urls[path]
-  end
-end
 
 SITE = CONFIG.path(:html_proofer, :code, :site)
 OUTPUTCONFIG = CONFIG.partial(:html_proofer, :output, :files)
 
-proofer = CustomRunner.new([SITE], {
-                             type: :directory,
-                             disable_external: ARGV[0] != '--external',
-                             ignore_missing_alt: true,
-                             checks: %w[Links Images Scripts UteleconDomain],
-                             swap_urls: {
-                               %r{^https?://utelecon\.adm\.u-tokyo\.ac\.jp} => '',
-                               %r{^https?://utelecon\.github\.io} => ''
-                             },
-                             cache: {
-                               timeframe: {
-                                 external: '30d'
-                               },
-                               cache_file: OUTPUTCONFIG.get(:cache),
-                               storage_dir: File.dirname(OUTPUTCONFIG.path(:cache))
-                             }
-                           })
+proofer = CustomHTMLProofer::Runner.new(
+  [SITE],
+  {
+    type: :directory,
+    disable_external: false,
+    ignore_missing_alt: true,
+    ignore_urls: [%r{^https://docs.google.com/forms/d/e/1FAIpQLSdEantPHma0G5NhkaSS_28MwfoTQNw9ic9TD8tb-snpcOZVjQ/.*$}],
+    checks: %w[Links Images Scripts UteleconDomain],
+    swap_urls: {
+      %r{^https?://utelecon\.adm\.u-tokyo\.ac\.jp} => '',
+      %r{^https?://utelecon\.github\.io} => ''
+    },
+    cache: {
+      timeframe: {
+        external: '30d'
+      },
+      cache_file: OUTPUTCONFIG.get(:cache),
+      storage_dir: File.dirname(OUTPUTCONFIG.path(:cache))
+    }
+  }
+)
 
 proofer.before_request do |request1|
   p request1.base_url
