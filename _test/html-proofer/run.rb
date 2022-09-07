@@ -32,10 +32,6 @@ proofer = CustomHTMLProofer::Runner.new(
   }
 )
 
-proofer.before_request do |request1|
-  p request1.base_url
-end
-
 proofer.run
 
 File.open(OUTPUTCONFIG.path(:failures), 'w') do |file|
