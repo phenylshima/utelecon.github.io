@@ -54,6 +54,7 @@ module CustomHTMLProofer
 
     def validate_external_urls
       external_url_validator = CustomHTMLProofer::UrlValidator::External.new(self, @external_urls)
+      external_url_validator.before_request = @before_request
       @failures.concat(external_url_validator.validate)
     end
   end

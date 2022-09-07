@@ -2,33 +2,41 @@
 
 require 'html_proofer'
 require 'uri'
+require 'timers'
 
 module CustomHTMLProofer
   class UrlValidator
     class External < HTMLProofer::UrlValidator::External
+      def initialize(runner, external_urls)
+        super
+        @timers = Timers::Group.new
+      end
+
       def run_external_link_checker(external_urls)
         # Route log from Typhoeus/Ethon to our own logger
         Ethon.logger = @logger
 
         external_urls.each_pair do |external_url, metadata|
-          url = HTMLProofer::Attribute::Url.new(@runner, external_url, base_url: nil)
+          @timers.after(1) do
+            url = HTMLProofer::Attribute::Url.new(@runner, external_url, base_url: nil)
 
-          unless url.valid?
-            add_failure(metadata, "#{url} is an invalid URL", 0)
-            next
+            unless url.valid?
+              add_failure(metadata, "#{url} is an invalid URL", 0)
+              next
+            end
+
+            next unless new_url_query_values?(url)
+
+            method = if @runner.options[:check_external_hash] && url.hash?
+                       :get
+                     else
+                       :head
+                     end
+
+            req = create_request(method, url, metadata)
+            req.run
           end
-
-          next unless new_url_query_values?(url)
-
-          method = if @runner.options[:check_external_hash] && url.hash?
-                     :get
-                   else
-                     :head
-                   end
-
-          req = create_request(method, url, metadata)
-          req.run
-          sleep(1)
+          @timers.wait
         end
       end
 

@@ -14,7 +14,7 @@ proofer = CustomHTMLProofer::Runner.new(
   [SITE],
   {
     type: :directory,
-    disable_external: false,
+    disable_external: ARGV[0] != '--external',
     ignore_missing_alt: true,
     ignore_urls: [%r{^https://docs.google.com/forms/d/e/1FAIpQLSdEantPHma0G5NhkaSS_28MwfoTQNw9ic9TD8tb-snpcOZVjQ/.*$}],
     checks: %w[Links Images Scripts UteleconDomain],
