@@ -32,6 +32,7 @@ jobs:
           enable-pull-request-comment: true
           overwrites-pull-request-comment: true
           enable-commit-comment: false
+          enable-github-deployment: false
           alias: deploy-preview-${{ github.event.number }}
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
