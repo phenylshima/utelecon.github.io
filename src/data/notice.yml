@@ -2,6 +2,11 @@
 
 # contentはMarkdown記法で入力できます．二重引用符はエスケープが必要ですので注意してください．
 # "important: true"を含めるとトップページにより長い期間表示されるようになります（必要な場合に限って利用してください）
+- 
+  date: 2024-12-02
+  content:
+    ja: "Test"
+    en: "Test"
 -
  date: 2024-11-26
  content:
