@@ -81,7 +81,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./dist --project-name=${ vars.PROJECT_NAME }
+          command: pages deploy ./dist --project-name=${{ vars.PROJECT_NAME }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
   twitter:
