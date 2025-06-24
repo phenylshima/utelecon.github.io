@@ -24,9 +24,8 @@ jobs:
       - name: Determine Pull Request Number
         id: set_pr_number
         run: |
-          echo "${{ github.event }}"
-          echo "${{ github.event.issue }}"
-          echo "${{ github.event.issue.closed }}"
+          echo "${{ toJSON(github.event) }}"
+          echo "${{ github.event.issue.closedAt }}"
           PR_NUMBER=""
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             PR_NUMBER="${{ github.event.pull_request.number }}"
